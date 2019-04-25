@@ -151,7 +151,9 @@ namespace ed
 
 		ArbolBinarioOrdenadoEnlazado ()
 		{
-			
+			_raiz=NULL;
+			_actual=NULL;
+			_padre=NULL;
 		}
 
 		ArbolBinarioOrdenadoEnlazado (const ArbolBinarioOrdenadoEnlazado<G>& a)
@@ -173,30 +175,42 @@ namespace ed
 
 		bool insertar(const G &x)
 		{
-			while(_actual->esHoja() == false){
-				if(_actual->getInfo() > x){
-					_actual = _actual->getDerecho();
-				}
-				else{
-					_actual = _actual->getIzquierdo();
-				}
+			if(_raiz == NULL){
+				NodoArbolBinario var(x);
+  				NodoArbolBinario * aux= &var;
+  				_raiz= aux;
+  				return true;
 			}
 
-  			NodoArbolBinario var(x);
-  			NodoArbolBinario * aux= &var;
+			else{
+				while(_actual->esHoja() == false){
+					if(_actual->getInfo() > x){
+						_padre=_actual;
+						_actual = _actual->getDerecho();
+					}
+					if(_actual->getInfo() < x){
+						_padre=_actual;
+						_actual = _actual->getIzquierdo();
+					}
+				}
+
+  				NodoArbolBinario var(x);
+  				NodoArbolBinario * aux= &var;
  
 
-			if(_actual->getInfo() > x){
-
-					_actual->setDerecho(aux);
-					return true;
-			}
-			else{
-					_actual->setIzquierdo(aux);
-					return true;
-			}
+				if(_actual->getInfo() > x){
+						_padre=_actual;
+						_actual->setDerecho(aux);
+						return true;
+				}
+				else{
+						_padre=_actual;
+						_actual->setIzquierdo(aux);
+						return true;
+				}
 
 			return false;
+			}
 		}
 
 		void borrarArbol()
@@ -208,7 +222,17 @@ namespace ed
 
 		bool borrar()
 		{
-			// TODO
+			if(_actual->esHoja() == true){
+				if(_actual->getInfo() < _padre->getInfo() ){
+					_padre->setDerecho(NULL);
+				}
+				if(_actual->getInfo() > _padre->getInfo() ){
+					_padre->setIzquierdo(NULL);
+				}
+				_actual=NULL;
+				return true;
+			}
+
 			return false;
 		}
 
@@ -241,23 +265,29 @@ namespace ed
 
 		bool buscar(const G& x) const
 		{
-			/*while(_actual->esHoja() == false){
+			if(_raiz == NULL){
 				if(_actual->getInfo() == x){
-					return true;
+						return true;
+					}
+			}
+			else{
+				while(_actual->esHoja() == false){
+						if(_actual->getInfo() == x){
+							return true;
+						}
+						if(_actual->getInfo() > x){
+							_actual->setDerecho(_actual->getDerecho());
+						}
+						if(_actual->getInfo() < x){
+							_actual->setIzquierdo(_actual->getIzquierdo());
+						}
 				}
-				if(_actual->getInfo() > x){
-					_actual = _actual->getDerecho();
-				}
-				if(_actual->getInfo() < x){
-					_actual = _actual->getIzquierdo();
+
+				if(_actual->getInfo() == x){
+
+						return true;
 				}
 			}
-
-			if(_actual->getInfo() == x){
-
-					return true;
-			}
-			*/
 			return false;
 		}
 
