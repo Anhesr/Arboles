@@ -40,7 +40,7 @@ namespace ed
 				this->_derecho=NULL;
 
 				#ifndef NDEBUG
-				assert(this->_izquierdo==NULL && this->_derecho==NULL);
+				assert(this->esHoja());
 				#endif
 			}
 
@@ -51,8 +51,9 @@ namespace ed
 				this->_derecho=n.getDerecho();
 
 				#ifndef NDEBUG
-				NodoArbolBinario const aux=*this ;
-				assert(aux == n);
+				assert(this->getInfo() == n.getInfo());
+				assert(this->getDerecho() == n.getDerecho());
+				assert(this->getIzquierdo() == n.getIzquierdo());
 				#endif
 			}
 
@@ -85,14 +86,22 @@ namespace ed
 				if(!operador.aplicar(this->getInfo())) {
 					return ;
 				}
-				this->getIzquierdo()->recorridoPreOrden(operador);
-				this->getDerecho()->recorridoPreOrden(operador);
+				if(this->getIzquierdo()!= NULL){
+					this->getIzquierdo()->recorridoPreOrden(operador);
+				}
+				if(this->getDerecho()!= NULL){
+					this->getDerecho()->recorridoPreOrden(operador);
+				}
 			}
 
 			void recorridoPostOrden (OperadorNodo<G> &operador) const
 			{
-				this->getIzquierdo()->recorridoPostOrden(operador);
-				this->getDerecho()->recorridoPostOrden(operador);
+				if(this->getIzquierdo()!= NULL){
+					this->getIzquierdo()->recorridoPostOrden(operador);
+				}
+				if(this->getDerecho()!= NULL){
+					this->getDerecho()->recorridoPostOrden(operador);
+				}
 				if(!operador.aplicar(this->getInfo())) {
 					return ;
 				}
@@ -100,11 +109,15 @@ namespace ed
 
 			void recorridoInOrden (OperadorNodo<G> &operador) const
 			{
-				this->getIzquierdo()->recorridoInOrden(operador);
+				if(this->getIzquierdo()!= NULL){
+					this->getIzquierdo()->recorridoInOrden(operador);
+				}
 				if(!operador.aplicar(this->getInfo())) {
 					return ;
 				}
-				this->getDerecho()->recorridoInOrden(operador);
+				if(this->getDerecho()!= NULL){
+					this->getDerecho()->recorridoInOrden(operador);
+				}
 			}
 
 			/*!\brief Modificadores. */
@@ -125,19 +138,11 @@ namespace ed
 
 			NodoArbolBinario & operator=(const NodoArbolBinario &n)
 			{
-				#ifndef NDEBUG
-				NodoArbolBinario const aux=*this ;
-				assert(aux != n);
-				#endif
 
 				this->_info=n.getInfo();
 				this->_izquierdo=n.getIzquierdo();
 				this->_derecho=n.getDerecho();
 
-				#ifndef NDEBUG
-				assert(aux == n);
-				#endif
-				
 			}
 
 		}; //Fin clase NodoArbolBinario
@@ -166,66 +171,52 @@ namespace ed
 		{
 			if (not estaVacio())
 			borrarArbol();
-			cout << "Destructor Usado \n";
+			//cout << "Destructor Usado \n";
 		}
-
 		ArbolBinarioOrdenadoEnlazado &operator=(const ArbolBinarioOrdenadoEnlazado& a)
 		{
 			this->_raiz=a._raiz;
 			this->_actual=a._actual;
 			this->_padre=a._padre;
 		}
-
 		bool insertar(const G &x)
 		{
-			if(_raiz == NULL){
-				NodoArbolBinario var(x);
-  				NodoArbolBinario * aux= &var;
-  				_raiz= aux;
-  				return true;
+			bool inst = false;
+			if (this->estaVacio()){
+				_raiz = new NodoArbolBinario(x);
+				inst = true;
 			}
-
 			else{
 				_padre = NULL;
 				_actual = _raiz;
-				while(_actual->esHoja() == false){
-					if(_actual->getInfo() > x){
-						if(_actual->getDerecho() != NULL){
-							_padre=_actual;
-							_actual = _actual->getDerecho();
-						}
-						else{
-							_actual->setDerecho(new NodoArbolBinario (x));
-							return true;
-						}
+			}
+			while (! inst){
+				if (x > this->actual()){
+					if (_actual->getDerecho() != NULL){
+						_padre = _actual;
+						_actual = _actual->getDerecho();
 					}
-					if(_actual->getInfo() < x){
-						if(_actual->getIzquierdo() != NULL){
-							_padre=_actual;
-							_actual = _actual->getIzquierdo();
-						}
-						else{
-							_actual->setIzquierdo(new NodoArbolBinario (x));
-							return true;
-						}
+					else{
+						_actual->setDerecho(new NodoArbolBinario(x));
+						inst = true;
 					}
-				}
- 
-
-				if(_actual->getInfo() > x){
-						_padre=_actual;
-						_actual->setDerecho(new NodoArbolBinario (x));
-						return true;
 				}
 				else{
-						_padre=_actual;
-						_actual->setIzquierdo(new NodoArbolBinario (x));
-						return true;
+					if (_actual->getIzquierdo() != NULL){
+						_padre = _actual;
+						_actual = _actual->getIzquierdo();
+					}
+					else{
+						_actual->setIzquierdo(new NodoArbolBinario(x));
+						inst = true;
+					}
 				}
 
-			return false;
 			}
+			
+			return inst;
 		}
+
 
 		void borrarArbol()
 		{
@@ -236,104 +227,132 @@ namespace ed
 
 		bool borrar()
 		{
-			if(_actual->esHoja() == true){
-				if(_actual->getInfo() < _padre->getInfo() ){
-					_padre->setDerecho(NULL);
-					_actual=_padre;
-				}
-				if(_actual->getInfo() > _padre->getInfo() ){
-					_padre->setIzquierdo(NULL);
-					_actual=_padre;
-				}
-				_actual=NULL;
-				return true;
-			}
-			else{
-				if(_actual->getDerecho() != NULL ){
-					_actual = _actual->getIzquierdo();
-					while(_actual->getDerecho()!= NULL){
-							_actual = _actual->getDerecho();
-					}
-					NodoArbolBinario aux= *_actual;
-					_padre->setDerecho(new NodoArbolBinario (aux));
-				}
-
-			}
-
-			return false;
-		}
-
-		void recorridoPreOrden (OperadorNodo<G> &operador) const
-		{
 			#ifndef NDEBUG
 				assert(! this->estaVacio());
 			#endif
+
+			NodoArbolBinario *aux_pt_actual;
+			NodoArbolBinario *aux_pt_padre;
+			aux_pt_actual = _actual;
+			aux_pt_padre = _padre;
+			bool borrado = false;
+
+			if(_actual->getDerecho() != NULL){
+				_padre = _actual;
+				_actual = _actual->getDerecho();
+
+				while(_actual->getIzquierdo() != NULL){
+					_padre = _actual;
+					_actual = _actual->getIzquierdo();
+				}
+
+				
+				if(_actual->getInfo() < _padre->getInfo()){
+					_padre->setIzquierdo(_actual->getDerecho());
+				}
+				else{
+					aux_pt_actual->setDerecho(_actual->getDerecho());
+				}
+				aux_pt_actual->setInfo(_actual->getInfo());
+				borrado = true;
+				_actual = aux_pt_actual;
+				_padre = aux_pt_padre;
+			}
+			else if (_actual->getIzquierdo() != NULL){
+				_padre = _actual;
+				_actual = _actual->getIzquierdo();
+
+				while(_actual->getDerecho() != NULL){
+					_padre = _actual;
+					_actual = _actual->getDerecho();
+				}
+
+				if(_actual->getInfo() > _padre->getInfo()){
+					_padre->setDerecho(_actual->getIzquierdo());
+				}
+				else{
+					aux_pt_actual->setIzquierdo(_actual->getIzquierdo());
+				}
+				aux_pt_actual->setInfo(_actual->getInfo());
+				borrado = true;
+				_actual = aux_pt_actual;
+				_padre = aux_pt_padre;
+
+			}
+			else{
+				if (_raiz == _actual){
+					this->borrarArbol();
+				}
+				else if(_actual->getInfo() < _padre->getInfo()){
+					_padre->setIzquierdo(NULL);
+				}
+				else{
+					_padre->setDerecho(NULL);
+				}
+				borrado = true;
+			}
+			return borrado;
+		}
+
+
+
+		void recorridoPreOrden (OperadorNodo<G> &operador) const
+		{
 			_raiz->recorridoPreOrden(operador);
 		}
 
 		void recorridoPostOrden (OperadorNodo<G> &operador) const
 		{
-			#ifndef NDEBUG
-				assert(! this->estaVacio());
-			#endif
 			_raiz->recorridoPostOrden(operador);
 		}
 
 		void recorridoInOrden (OperadorNodo<G> &operador) const
 		{
-			#ifndef NDEBUG
-				assert(! this->estaVacio());
-			#endif
 			_raiz->recorridoInOrden(operador);
 		}
 
 		bool buscar(const G& x)
 		{
-			if(this->estaVacio()){
-				return false;
-			}
-			else{
-				NodoArbolBinario *aux=_raiz;
+			bool encontrado = false;
+			_padre = NULL;
+			_actual = _raiz;
 
-				while(aux->esHoja() == false){
-						if(aux->getInfo() == x){
-							_actual=aux;
-							return true;
-						}
-						if(aux->getInfo() > x){
-							if(aux->getDerecho()!= NULL){
-								aux = aux->getDerecho();
-							}
-							else{
-								_actual=NULL;
-								return false;
-							}
-						}
-						if(aux->getInfo() < x){
-							if(aux->getIzquierdo()!= NULL){
-								aux = aux->getIzquierdo();
-							}
-							else{
-								_actual=NULL;
-								return false;
-							}
-						}
+			while((_actual != NULL)&&(! encontrado)){
+				if (_actual->getInfo() > x){
+					if (_actual->getIzquierdo() != NULL){
+						_padre = _actual;
+						_actual = _actual->getIzquierdo();
+					}
+					else{
+						_actual = NULL;
+					}
 				}
-
-				if(aux->getInfo() == x){
-						_actual=aux;
-						return true;
+				else if(_actual->getInfo() < x){
+					if (_actual->getDerecho() != NULL){
+						_padre = _actual;
+						_actual = _actual->getDerecho();
+					}
+					else{
+						_actual = NULL;
+					}
+				}
+				else{
+					encontrado = true;
 				}
 			}
-			return false;
+			if (_actual == NULL){
+				_padre = NULL;
+				_actual = _raiz;
+			}
+
+			return encontrado;
 		}
-
 		bool estaVacio() const
 		{
 			if (_raiz == NULL){
-				return false;
+				return true;
 			}
-			return true;
+			return false;
 		}
 
 		G raiz() const
